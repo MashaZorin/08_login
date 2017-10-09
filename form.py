@@ -3,41 +3,37 @@ import os
 
 app = Flask(__name__)
 app.secret_key = os.urandom(32)
-accounts = {'username', 'password'}
+accounts = {}
+accounts['username'] = 'password'
 
 @app.route('/', methods = ['GET', 'POST'])
 def initial():
     if 'username' in session:
-        redirect(url_for('welcome'))
+        return redirect(url_for('welcome'))
     else:
-        redirect(url_for('root'))
+        return render_template('root.html', message='')
 
-@app.route('/welcome', methods = ['POST'])
+@app.route('/welcome', methods = ['GET', 'POST'])
 def welcome():
-    username = request.form['username']
-    password = request.form['username']
-    if username in accounts.keys() and account[username] == password:
-            session['username'] = username
-            redirect(url_for('welcome'))
+    if request.method == 'GET':
+        username = session['username']
+        password = accounts[username]
     else:
-            redirect(url_for('error'))
+        username = request.form['username']
+        password = request.form['password']
+
+    if username in accounts and accounts[username] == password:
+            session['username'] = username
+            return render_template('welcome.html', name=session['username'])
+    else:
+            return render_template('root.html', message='incorrect, please try again')
     
 @app.route('/logout', methods = ['POST'])
 def logout():
-    session.pop()
-    redirect(url_for('logoutScreen'))
+    session.pop('username')
+    return render_template('root.html', message='Logged out!')
 
-#|==============================================|
-def root():
-    return render_template('root.html', message='')
-def error():
-    return render_template('root.html', message='incorrect, please try again')
-def welcome():
-    return render_template('welcome.html', name=session['username'])
-def logoutScreen():
-    return render_template('logout.html')
-#|==============================================|
 
 if __name__ == '__main__':
     app.debug = True
-app.run()
+    app.run()
